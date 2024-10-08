@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de Compras</title>
+    <title>Lista de la Compra</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -62,53 +62,91 @@
     </form>
     <button id="reiniciarBtn">Reiniciar Lista</button>
 
-    <script>
-        const lista = document.getElementById('lista');
-        const agregarForm = document.getElementById('agregarForm');
-        const itemInput = document.getElementById('itemInput');
-        const reiniciarBtn = document.getElementById('reiniciarBtn');
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+	<script type="module">
+		// ...
 
-        // Cargar lista desde localStorage
-        let items = JSON.parse(localStorage.getItem('listaCompras')) || [];
+		// TODO: Replace the following with your app's Firebase project configuration
+		const firebaseConfig = {
+			apiKey: "AIzaSyCpC3wNuyv2iAM-3EfdHNKUsdupzzhGu-Q",
+			authDomain: "listacompra-874d8.firebaseapp.com",
+			projectId: "listacompra-874d8",
+			storageBucket: "listacompra-874d8.appspot.com",
+			messagingSenderId: "141147095610",
+			appId: "1:141147095610:web:2733150de00e1fc8caab03",
+			measurementId: "G-GVWZMBF02G"
+		};
 
-        function actualizarLista() {
-            lista.innerHTML = '';
-            items.forEach((item, index) => {
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    ${item}
-                    <button onclick="eliminarItem(${index})">Eliminar</button>
-                `;
-                lista.appendChild(li);
-            });
-            guardarLista();
-        }
+		// Initialize Firebase
+		const app = initializeApp(firebaseConfig);
+		const analytics = getAnalytics(app);
+		// Inicializar Firebase (reemplace con su configuración)
 
-        function guardarLista() {
-            localStorage.setItem('listaCompras', JSON.stringify(items));
-        }
+		// Referencias a elementos del DOM
+		const itemInput = document.getElementById('itemInput');
+		const addButton = document.getElementById('addButton');
+		const itemList = document.getElementById('itemList');
+		const loginButton = document.getElementById('loginButton');
+		const logoutButton = document.getElementById('logoutButton');
 
-        function eliminarItem(index) {
-            items.splice(index, 1);
-            actualizarLista();
-        }
+		// Autenticación
+		loginButton.addEventListener('click', () => {
+			const provider = new firebase.auth.GoogleAuthProvider();
+			firebase.auth().signInWithPopup(provider);
+		});
 
-        agregarForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const newItem = itemInput.value.trim();
-            if (newItem) {
-                items.push(newItem);
-                itemInput.value = '';
-                actualizarLista();
-            }
-        });
+		logoutButton.addEventListener('click', () => {
+			firebase.auth().signOut();
+		});
 
-        reiniciarBtn.addEventListener('click', () => {
-            items = [];
-            actualizarLista();
-        });
+		firebase.auth().onAuthStateChanged((user) => {
+			if (user) {
+				// Usuario ha iniciado sesión
+				loginButton.style.display = 'none';
+				logoutButton.style.display = 'block';
+				loadItems();
+			} else {
+				// Usuario ha cerrado sesión
+				loginButton.style.display = 'block';
+				logoutButton.style.display = 'none';
+				itemList.innerHTML = '';
+			}
+		});
 
-        actualizarLista();
-    </script>
+		// Agregar item
+		addButton.addEventListener('click', () => {
+			const item = itemInput.value.trim();
+			if (item && firebase.auth().currentUser) {
+				const userId = firebase.auth().currentUser.uid;
+				firebase.database().ref('shoppingLists/' + userId).push({
+					name: item,
+					createdAt: firebase.database.ServerValue.TIMESTAMP
+				});
+				itemInput.value = '';
+			}
+		});
+
+		// Cargar items
+		function loadItems() {
+			const userId = firebase.auth().currentUser.uid;
+			firebase.database().ref('shoppingLists/' + userId).on('value', (snapshot) => {
+				itemList.innerHTML = '';
+				snapshot.forEach((childSnapshot) => {
+					const item = childSnapshot.val();
+					const li = document.createElement('li');
+					li.textContent = item.name;
+					const deleteButton = document.createElement('button');
+					deleteButton.textContent = 'Eliminar';
+					deleteButton.onclick = () => {
+						childSnapshot.ref.remove();
+					};
+					li.appendChild(deleteButton);
+					itemList.appendChild(li);
+				});
+			});
+		}
+  	</script>
 </body>
 </html>
