@@ -111,7 +111,7 @@
             const item = itemInput.value.trim();
             if (item && firebase.auth().currentUser) {
                 const userId = firebase.auth().currentUser.uid;
-                firebase.database().ref('shoppingLists/' + userId).push({
+                firebase.database().ref('https://listacompra-874d8-default-rtdb.europe-west1.firebasedatabase.app/' + userId).push({
                     name: item,
                     createdAt: firebase.database.ServerValue.TIMESTAMP
                 });
@@ -122,7 +122,7 @@
         // Cargar items
         function cargarItems() {
             const userId = firebase.auth().currentUser.uid;
-            firebase.database().ref('shoppingLists/' + userId).on('value', (snapshot) => {
+            firebase.database().ref('https://listacompra-874d8-default-rtdb.europe-west1.firebasedatabase.app/' + userId).on('value', (snapshot) => {
                 lista.innerHTML = '';
                 snapshot.forEach((childSnapshot) => {
                     const item = childSnapshot.val();
@@ -143,7 +143,7 @@
         reiniciarBtn.addEventListener('click', () => {
             if (firebase.auth().currentUser) {
                 const userId = firebase.auth().currentUser.uid;
-                firebase.database().ref('shoppingLists/' + userId).remove();
+                firebase.database().ref('https://listacompra-874d8-default-rtdb.europe-west1.firebasedatabase.app/' + userId).remove();
             }
         });
     </script>
