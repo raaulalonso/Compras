@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Compras</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+        }
+        #lista {
+            list-style-type: none;
+            padding: 0;
+        }
+        #lista li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        #lista li button {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        #agregarForm {
+            display: flex;
+            margin-top: 20px;
+        }
+        #itemInput {
+            flex-grow: 1;
+            padding: 5px;
+        }
+        #agregarBtn, #reiniciarBtn {
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        #reiniciarBtn {
+            display: block;
+            margin: 20px auto;
+            background-color: #ffaa00;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lista de Compras</h1>
+    <ul id="lista"></ul>
+    <form id="agregarForm">
+        <input type="text" id="itemInput" placeholder="Agregar item" required>
+        <button type="submit" id="agregarBtn">Agregar</button>
+    </form>
+    <button id="reiniciarBtn">Reiniciar Lista</button>
+
+    <script>
+        const lista = document.getElementById('lista');
+        const agregarForm = document.getElementById('agregarForm');
+        const itemInput = document.getElementById('itemInput');
+        const reiniciarBtn = document.getElementById('reiniciarBtn');
+
+        // Cargar lista desde localStorage
+        let items = JSON.parse(localStorage.getItem('listaCompras')) || [];
+
+        function actualizarLista() {
+            lista.innerHTML = '';
+            items.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    ${item}
+                    <button onclick="eliminarItem(${index})">Eliminar</button>
+                `;
+                lista.appendChild(li);
+            });
+            guardarLista();
+        }
+
+        function guardarLista() {
+            localStorage.setItem('listaCompras', JSON.stringify(items));
+        }
+
+        function eliminarItem(index) {
+            items.splice(index, 1);
+            actualizarLista();
+        }
+
+        agregarForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newItem = itemInput.value.trim();
+            if (newItem) {
+                items.push(newItem);
+                itemInput.value = '';
+                actualizarLista();
+            }
+        });
+
+        reiniciarBtn.addEventListener('click', () => {
+            items = [];
+            actualizarLista();
+        });
+
+        actualizarLista();
+    </script>
+</body>
+</html>
