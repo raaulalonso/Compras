@@ -40,7 +40,7 @@
             flex-grow: 1;
             padding: 5px;
         }
-        #agregarBtn, #reiniciarBtn {
+        #agregarBtn, #reiniciarBtn, #loginBtn, #logoutBtn {
             padding: 5px 10px;
             cursor: pointer;
         }
@@ -51,10 +51,19 @@
             color: white;
             border: none;
         }
+        #loginBtn, #logoutBtn {
+            display: block;
+            margin: 10px auto;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+        }
     </style>
 </head>
 <body>
     <h1>Lista de Compras</h1>
+    <button id="loginBtn">Iniciar sesión con Google</button>
+    <button id="logoutBtn" style="display: none;">Cerrar sesión</button>
     <ul id="lista"></ul>
     <form id="agregarForm">
         <input type="text" id="itemInput" placeholder="Agregar item" required>
@@ -62,91 +71,99 @@
     </form>
     <button id="reiniciarBtn">Reiniciar Lista</button>
 
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-	<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-	<script type="module">
-		// ...
+    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-		// TODO: Replace the following with your app's Firebase project configuration
-		const firebaseConfig = {
-			apiKey: "AIzaSyCpC3wNuyv2iAM-3EfdHNKUsdupzzhGu-Q",
-			authDomain: "listacompra-874d8.firebaseapp.com",
-			projectId: "listacompra-874d8",
-			storageBucket: "listacompra-874d8.appspot.com",
-			messagingSenderId: "141147095610",
-			appId: "1:141147095610:web:2733150de00e1fc8caab03",
-			measurementId: "G-GVWZMBF02G"
+    <script>
+        // Configuración de Firebase (reemplace con su propia configuración)
+        const firebaseConfig = {
+  			apiKey: "AIzaSyCpC3wNuyv2iAM-3EfdHNKUsdupzzhGu-Q",
+  			authDomain: "listacompra-874d8.firebaseapp.com",
+  			projectId: "listacompra-874d8",
+  			storageBucket: "listacompra-874d8.appspot.com",
+  			messagingSenderId: "141147095610",
+  			appId: "1:141147095610:web:2733150de00e1fc8caab03",
+  			measurementId: "G-GVWZMBF02G"
 		};
+        firebase.initializeApp(firebaseConfig);
 
-		// Initialize Firebase
-		const app = initializeApp(firebaseConfig);
-		const analytics = getAnalytics(app);
-		// Inicializar Firebase (reemplace con su configuración)
+        // Referencias a elementos del DOM
+        const lista = document.getElementById('lista');
+        const agregarForm = document.getElementById('agregarForm');
+        const itemInput = document.getElementById('itemInput');
+        const reiniciarBtn = document.getElementById('reiniciarBtn');
+        const loginBtn = document.getElementById('loginBtn');
+        const logoutBtn = document.getElementById('logoutBtn');
 
-		// Referencias a elementos del DOM
-		const itemInput = document.getElementById('itemInput');
-		const addButton = document.getElementById('addButton');
-		const itemList = document.getElementById('itemList');
-		const loginButton = document.getElementById('loginButton');
-		const logoutButton = document.getElementById('logoutButton');
+        // Autenticación
+        loginBtn.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            firebase.auth().signInWithPopup(provider);
+        });
 
-		// Autenticación
-		loginButton.addEventListener('click', () => {
-			const provider = new firebase.auth.GoogleAuthProvider();
-			firebase.auth().signInWithPopup(provider);
-		});
+        logoutBtn.addEventListener('click', () => {
+            firebase.auth().signOut();
+        });
 
-		logoutButton.addEventListener('click', () => {
-			firebase.auth().signOut();
-		});
+        firebase.auth().onAuthStateChanged((user) => {
+            if (user) {
+                loginBtn.style.display = 'none';
+                logoutBtn.style.display = 'block';
+                agregarForm.style.display = 'flex';
+                reiniciarBtn.style.display = 'block';
+                cargarItems();
+            } else {
+                loginBtn.style.display = 'block';
+                logoutBtn.style.display = 'none';
+                agregarForm.style.display = 'none';
+                reiniciarBtn.style.display = 'none';
+                lista.innerHTML = '';
+            }
+        });
 
-		firebase.auth().onAuthStateChanged((user) => {
-			if (user) {
-				// Usuario ha iniciado sesión
-				loginButton.style.display = 'none';
-				logoutButton.style.display = 'block';
-				loadItems();
-			} else {
-				// Usuario ha cerrado sesión
-				loginButton.style.display = 'block';
-				logoutButton.style.display = 'none';
-				itemList.innerHTML = '';
-			}
-		});
+        // Agregar item
+        agregarForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const item = itemInput.value.trim();
+            if (item && firebase.auth().currentUser) {
+                const userId = firebase.auth().currentUser.uid;
+                firebase.database().ref('shoppingLists/' + userId).push({
+                    name: item,
+                    createdAt: firebase.database.ServerValue.TIMESTAMP
+                });
+                itemInput.value = '';
+            }
+        });
 
-		// Agregar item
-		addButton.addEventListener('click', () => {
-			const item = itemInput.value.trim();
-			if (item && firebase.auth().currentUser) {
-				const userId = firebase.auth().currentUser.uid;
-				firebase.database().ref('shoppingLists/' + userId).push({
-					name: item,
-					createdAt: firebase.database.ServerValue.TIMESTAMP
-				});
-				itemInput.value = '';
-			}
-		});
+        // Cargar items
+        function cargarItems() {
+            const userId = firebase.auth().currentUser.uid;
+            firebase.database().ref('shoppingLists/' + userId).on('value', (snapshot) => {
+                lista.innerHTML = '';
+                snapshot.forEach((childSnapshot) => {
+                    const item = childSnapshot.val();
+                    const li = document.createElement('li');
+                    li.textContent = item.name;
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Eliminar';
+                    deleteBtn.onclick = () => {
+                        childSnapshot.ref.remove();
+                    };
+                    li.appendChild(deleteBtn);
+                    lista.appendChild(li);
+                });
+            });
+        }
 
-		// Cargar items
-		function loadItems() {
-			const userId = firebase.auth().currentUser.uid;
-			firebase.database().ref('shoppingLists/' + userId).on('value', (snapshot) => {
-				itemList.innerHTML = '';
-				snapshot.forEach((childSnapshot) => {
-					const item = childSnapshot.val();
-					const li = document.createElement('li');
-					li.textContent = item.name;
-					const deleteButton = document.createElement('button');
-					deleteButton.textContent = 'Eliminar';
-					deleteButton.onclick = () => {
-						childSnapshot.ref.remove();
-					};
-					li.appendChild(deleteButton);
-					itemList.appendChild(li);
-				});
-			});
-		}
-  	</script>
+        // Reiniciar lista
+        reiniciarBtn.addEventListener('click', () => {
+            if (firebase.auth().currentUser) {
+                const userId = firebase.auth().currentUser.uid;
+                firebase.database().ref('shoppingLists/' + userId).remove();
+            }
+        });
+    </script>
 </body>
 </html>
