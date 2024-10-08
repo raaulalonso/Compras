@@ -54,90 +54,81 @@
 	</style>
 </head>
 <body>
-	<h1>Lista de Compras</h1>
+	<h1>Lista de la Compra</h1>
 	<ul id="lista"></ul>
-	<form id="agregarForm">
-		<input type="text" id="itemInput" placeholder="Agregar item" required>
-		<button type="submit" id="agregarBtn">Agregar</button>
-	</form>
+	<div id="agregarForm">
+		<input type="text" id="itemInput" placeholder="Agregar item">
+		<button id="agregarBtn">Agregar</button>
+	</div>
 	<button id="reiniciarBtn">Reiniciar Lista</button>
-
-	<script type="module">
-		import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-		import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
-		import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
-		import { getDatabase, ref, push, onValue, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
-
-		const firebaseConfig = {
-			apiKey: "AIzaSyCpC3wNuyv2iAM-3EfdHNKUsdupzzhGu-Q",
-			authDomain: "listacompra-874d8.firebaseapp.com",
-			databaseURL: "https://listacompra-874d8-default-rtdb.europe-west1.firebasedatabase.app",
-			projectId: "listacompra-874d8",
-			storageBucket: "listacompra-874d8.appspot.com",
-			messagingSenderId: "141147095610",
-			appId: "1:141147095610:web:2733150de00e1fc8caab03",
-			measurementId: "G-GVWZMBF02G"
-		};
-
-		const app = initializeApp(firebaseConfig);
-		const auth = getAuth(app);
-		const database = getDatabase(app);
-
-		const lista = document.getElementById('lista');
-		const agregarForm = document.getElementById('agregarForm');
-		const itemInput = document.getElementById('itemInput');
-		const reiniciarBtn = document.getElementById('reiniciarBtn');
-
-		signInAnonymously(auth).catch((error) => {
-			console.error("Error de autenticación:", error);
-		});
-
-		onAuthStateChanged(auth, (user) => {
-			if (user) {
-				cargarItems();
-			} else {
-				lista.innerHTML = '';
-			}
-		});
-
-		agregarForm.addEventListener('submit', (e) => {
-			e.preventDefault();
-			const item = itemInput.value.trim();
-			if (item && auth.currentUser) {
-				const userId = auth.currentUser.uid;
-				push(ref(database, userId), {
-					name: item,
-					createdAt: serverTimestamp()
-				});
-				itemInput.value = '';
-			}
-		});
-
-		function cargarItems() {
-			const userId = auth.currentUser.uid;
-			onValue(ref(database, userId), (snapshot) => {
-				lista.innerHTML = '';
-				snapshot.forEach((childSnapshot) => {
-					const item = childSnapshot.val();
-					const li = document.createElement('li');
-					li.textContent = item.name;
-					const deleteBtn = document.createElement('button');
-					deleteBtn.textContent = 'Eliminar';
-					deleteBtn.onclick = () => {
-						remove(childSnapshot.ref);
-					};
-					li.appendChild(deleteBtn);
-					lista.appendChild(li);
-				});
-			});
-		}
-
-		reiniciarBtn.addEventListener('click', () => {
-			if (auth.currentUser) {
-				const userId = auth.currentUser.uid;
-				remove(ref(database, userId));
-			}
-		});
-	</script>
 </body>
+
+<script type="module">
+	import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+	import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+	import { remove } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+	import { onValue } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
+	const firebaseConfig = {
+		apiKey: "AIzaSyCxvWLXO6hULWf-aILI_H3otRZOFHhzg8U",
+		authDomain: "compra-cfe95.firebaseapp.com",
+		databaseURL: "https://compra-cfe95-default-rtdb.europe-west1.firebasedatabase.app",
+		projectId: "compra-cfe95",
+		storageBucket: "compra-cfe95.appspot.com",
+		messagingSenderId: "576739829962",
+		appId: "1:576739829962:web:3e3e13607690af86a72c33"
+	};
+
+	// Initialize Firebase
+	const app = initializeApp(firebaseConfig);
+
+	// Obtén una referencia a la base de datos
+	const database = getDatabase(app);
+
+	// Función para guardar datos en la base de datos
+	function enviar(event) {
+		event.preventDefault();
+		var item = document.getElementById('itemInput').value;
+		const userRef = ref(database, 'compra/' + item);
+
+		// Guarda los datos usando la función set()
+		set(userRef, {
+			item: item
+		})
+		document.getElementById('itemInput').value = null;
+		mostrar();
+	}
+
+	function reiniciar(event) {
+		const listaRef = ref(database, 'compra');
+		remove(listaRef).then(() => {
+			console.log("Lista reiniciada");
+		}).catch((error) => {
+			console.error("Error al reiniciar la lista: ", error);
+		});
+	}
+
+	function mostrar() {
+		const listaRef = ref(database, 'compra');
+		onValue(listaRef, (snapshot) => {
+			const lista = document.getElementById('lista');
+			lista.innerHTML = '';
+			snapshot.forEach((childSnapshot) => {
+				const item = childSnapshot.val().item;
+				const li = document.createElement('li');
+				li.textContent = item;
+				const button = document.createElement('button');
+				button.textContent = 'Eliminar';
+				button.addEventListener('click', () => {
+					remove(ref(database, 'compra/' + item));
+				});
+				li.appendChild(button);
+				lista.appendChild(li);
+			});
+		});
+	}
+
+	document.getElementById('agregarBtn').addEventListener('click', enviar);
+	document.getElementById('reiniciarBtn').addEventListener('click', reiniciar);
+	mostrar();
+</script>
 </html>
