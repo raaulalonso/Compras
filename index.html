@@ -1,151 +1,143 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista de la Compra</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 400px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        h1 {
-            text-align: center;
-        }
-        #lista {
-            list-style-type: none;
-            padding: 0;
-        }
-        #lista li {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px;
-            border-bottom: 1px solid #ddd;
-        }
-        #lista li button {
-            background-color: #ff4444;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-        #agregarForm {
-            display: flex;
-            margin-top: 20px;
-        }
-        #itemInput {
-            flex-grow: 1;
-            padding: 5px;
-        }
-        #agregarBtn, #reiniciarBtn {
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-        #reiniciarBtn {
-            display: block;
-            margin: 20px auto;
-            background-color: #ffaa00;
-            color: white;
-            border: none;
-        }
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Lista de la Compra</title>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			max-width: 400px;
+			margin: 0 auto;
+			padding: 20px;
+		}
+		h1 {
+			text-align: center;
+		}
+		#lista {
+			list-style-type: none;
+			padding: 0;
+		}
+		#lista li {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 10px;
+			border-bottom: 1px solid #ddd;
+		}
+		#lista li button {
+			background-color: #ff4444;
+			color: white;
+			border: none;
+			padding: 5px 10px;
+			cursor: pointer;
+		}
+		#agregarForm {
+			display: flex;
+			margin-top: 20px;
+		}
+		#itemInput {
+			flex-grow: 1;
+			padding: 5px;
+		}
+		#agregarBtn, #reiniciarBtn {
+			padding: 5px 10px;
+			cursor: pointer;
+		}
+		#reiniciarBtn {
+			display: block;
+			margin: 20px auto;
+			background-color: #ffaa00;
+			color: white;
+			border: none;
+		}
+	</style>
 </head>
 <body>
-    <h1>Lista de Compras</h1>
-    <ul id="lista"></ul>
-    <form id="agregarForm">
-        <input type="text" id="itemInput" placeholder="Agregar item" required>
-        <button type="submit" id="agregarBtn">Agregar</button>
-    </form>
-    <button id="reiniciarBtn">Reiniciar Lista</button>
+	<h1>Lista de Compras</h1>
+	<ul id="lista"></ul>
+	<form id="agregarForm">
+		<input type="text" id="itemInput" placeholder="Agregar item" required>
+		<button type="submit" id="agregarBtn">Agregar</button>
+	</form>
+	<button id="reiniciarBtn">Reiniciar Lista</button>
 
-    <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
+	<script type="module">
+		import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+		import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
+		import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-auth.js";
+		import { getDatabase, ref, push, onValue, remove, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-database.js";
 
-    <script type="module">
-        // Configuración de Firebase (reemplace con su propia configuración)
-         // Import the functions you need from the SDKs you need
-  		import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-  		import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-analytics.js";
-  		// TODO: Add SDKs for Firebase products that you want to use
-  		// https://firebase.google.com/docs/web/setup#available-libraries
+		const firebaseConfig = {
+			apiKey: "AIzaSyCpC3wNuyv2iAM-3EfdHNKUsdupzzhGu-Q",
+			authDomain: "listacompra-874d8.firebaseapp.com",
+			databaseURL: "https://listacompra-874d8-default-rtdb.europe-west1.firebasedatabase.app",
+			projectId: "listacompra-874d8",
+			storageBucket: "listacompra-874d8.appspot.com",
+			messagingSenderId: "141147095610",
+			appId: "1:141147095610:web:2733150de00e1fc8caab03",
+			measurementId: "G-GVWZMBF02G"
+		};
 
-  		// Your web app's Firebase configuration
-  		// For Firebase JS SDK v7.20.0 and later, measurementId is optional
-  		const firebaseConfig = {
-    		apiKey: "AIzaSyCpC3wNuyv2iAM-3EfdHNKUsdupzzhGu-Q",
-    		authDomain: "listacompra-874d8.firebaseapp.com",
-    		databaseURL: "https://listacompra-874d8-default-rtdb.europe-west1.firebasedatabase.app",
-    		projectId: "listacompra-874d8",
-    		storageBucket: "listacompra-874d8.appspot.com",
-    		messagingSenderId: "141147095610",
-    		appId: "1:141147095610:web:2733150de00e1fc8caab03",
-    		measurementId: "G-GVWZMBF02G"
-  		};
-        firebase.initializeApp(firebaseConfig);
+		const app = initializeApp(firebaseConfig);
+		const auth = getAuth(app);
+		const database = getDatabase(app);
 
-        // Referencias a elementos del DOM
-        const lista = document.getElementById('lista');
-        const agregarForm = document.getElementById('agregarForm');
-        const itemInput = document.getElementById('itemInput');
-        const reiniciarBtn = document.getElementById('reiniciarBtn');
+		const lista = document.getElementById('lista');
+		const agregarForm = document.getElementById('agregarForm');
+		const itemInput = document.getElementById('itemInput');
+		const reiniciarBtn = document.getElementById('reiniciarBtn');
 
-        // Autenticación anónima
-        firebase.auth().signInAnonymously().catch((error) => {
-            console.error("Error de autenticación:", error);
-        });
+		signInAnonymously(auth).catch((error) => {
+			console.error("Error de autenticación:", error);
+		});
 
-        firebase.auth().onAuthStateChanged((user) => {
-            if (user) {
-                cargarItems();
-            } else {
-                lista.innerHTML = '';
-            }
-        });
+		onAuthStateChanged(auth, (user) => {
+			if (user) {
+				cargarItems();
+			} else {
+				lista.innerHTML = '';
+			}
+		});
 
-        // Agregar item
-        agregarForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const item = itemInput.value.trim();
-            if (item && firebase.auth().currentUser) {
-                const userId = firebase.auth().currentUser.uid;
-                firebase.database().ref('https://listacompra-874d8-default-rtdb.europe-west1.firebasedatabase.app/' + userId).push({
-                    name: item,
-                    createdAt: firebase.database.ServerValue.TIMESTAMP
-                });
-                itemInput.value = '';
-            }
-        });
+		agregarForm.addEventListener('submit', (e) => {
+			e.preventDefault();
+			const item = itemInput.value.trim();
+			if (item && auth.currentUser) {
+				const userId = auth.currentUser.uid;
+				push(ref(database, userId), {
+					name: item,
+					createdAt: serverTimestamp()
+				});
+				itemInput.value = '';
+			}
+		});
 
-        // Cargar items
-        function cargarItems() {
-            const userId = firebase.auth().currentUser.uid;
-            firebase.database().ref('https://listacompra-874d8-default-rtdb.europe-west1.firebasedatabase.app/' + userId).on('value', (snapshot) => {
-                lista.innerHTML = '';
-                snapshot.forEach((childSnapshot) => {
-                    const item = childSnapshot.val();
-                    const li = document.createElement('li');
-                    li.textContent = item.name;
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.textContent = 'Eliminar';
-                    deleteBtn.onclick = () => {
-                        childSnapshot.ref.remove();
-                    };
-                    li.appendChild(deleteBtn);
-                    lista.appendChild(li);
-                });
-            });
-        }
+		function cargarItems() {
+			const userId = auth.currentUser.uid;
+			onValue(ref(database, userId), (snapshot) => {
+				lista.innerHTML = '';
+				snapshot.forEach((childSnapshot) => {
+					const item = childSnapshot.val();
+					const li = document.createElement('li');
+					li.textContent = item.name;
+					const deleteBtn = document.createElement('button');
+					deleteBtn.textContent = 'Eliminar';
+					deleteBtn.onclick = () => {
+						remove(childSnapshot.ref);
+					};
+					li.appendChild(deleteBtn);
+					lista.appendChild(li);
+				});
+			});
+		}
 
-        // Reiniciar lista
-        reiniciarBtn.addEventListener('click', () => {
-            if (firebase.auth().currentUser) {
-                const userId = firebase.auth().currentUser.uid;
-                firebase.database().ref('https://listacompra-874d8-default-rtdb.europe-west1.firebasedatabase.app/' + userId).remove();
-            }
-        });
-    </script>
+		reiniciarBtn.addEventListener('click', () => {
+			if (auth.currentUser) {
+				const userId = auth.currentUser.uid;
+				remove(ref(database, userId));
+			}
+		});
+	</script>
 </body>
 </html>
