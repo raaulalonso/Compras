@@ -40,7 +40,7 @@
             flex-grow: 1;
             padding: 5px;
         }
-        #agregarBtn, #reiniciarBtn, #loginBtn, #logoutBtn {
+        #agregarBtn, #reiniciarBtn {
             padding: 5px 10px;
             cursor: pointer;
         }
@@ -51,19 +51,10 @@
             color: white;
             border: none;
         }
-        #loginBtn, #logoutBtn {
-            display: block;
-            margin: 10px auto;
-            background-color: #4285F4;
-            color: white;
-            border: none;
-        }
     </style>
 </head>
 <body>
     <h1>Lista de Compras</h1>
-    <button id="loginBtn">Iniciar sesión con Google</button>
-    <button id="logoutBtn" style="display: none;">Cerrar sesión</button>
     <ul id="lista"></ul>
     <form id="agregarForm">
         <input type="text" id="itemInput" placeholder="Agregar item" required>
@@ -94,31 +85,16 @@
         const agregarForm = document.getElementById('agregarForm');
         const itemInput = document.getElementById('itemInput');
         const reiniciarBtn = document.getElementById('reiniciarBtn');
-        const loginBtn = document.getElementById('loginBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
 
-        // Autenticación
-        loginBtn.addEventListener('click', () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            firebase.auth().signInWithPopup(provider);
-        });
-
-        logoutBtn.addEventListener('click', () => {
-            firebase.auth().signOut();
+        // Autenticación anónima
+        firebase.auth().signInAnonymously().catch((error) => {
+            console.error("Error de autenticación:", error);
         });
 
         firebase.auth().onAuthStateChanged((user) => {
             if (user) {
-                loginBtn.style.display = 'none';
-                logoutBtn.style.display = 'block';
-                agregarForm.style.display = 'flex';
-                reiniciarBtn.style.display = 'block';
                 cargarItems();
             } else {
-                loginBtn.style.display = 'block';
-                logoutBtn.style.display = 'none';
-                agregarForm.style.display = 'none';
-                reiniciarBtn.style.display = 'none';
                 lista.innerHTML = '';
             }
         });
