@@ -113,7 +113,7 @@
 	function enviar(event) {
 		event.preventDefault();
 		var item = document.getElementById('itemInput').value;
-		const userRef = ref(database, 'compra/');
+		const userRef = ref(database, 'compra/' + item);
 
 		// Guarda los datos usando la función set()
 		set(userRef, {
