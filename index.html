@@ -5,14 +5,10 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Lista de la Compra</title>
 	<style>
-		html {
-			background-color: rgb(129, 61, 218);
-		}
-		html, body {
-			overflow: hidden;
+		html{
 			background-image: linear-gradient(to top, black, rgb(129, 61, 218));
 			height: 100%;
-			background-repeat: no-repeat;
+			background-color: rgb(129, 61, 218);
 		}
 		body {
 			font-family: Arial, sans-serif;
@@ -43,6 +39,7 @@
 			border: none;
 			padding: 5px 10px;
 			cursor: pointer;
+			border-radius: 15px;
 		}
 		#agregarForm {
 			display: flex;
@@ -50,37 +47,39 @@
 			margin: 5vw;
 		}
 		#itemInput {
-			width: 55vw;
-			height: 40px;
+			width: 45vw;
 			font-size: large;
+			padding: 20px;
 			background-color: rgb(54, 23, 93);
 			border-style: none;
 			color: white;
-			border-radius: 6px;
+			border-radius: 30px;
+			margin-right: 10px;
 		}
 		#agregarBtn {
-			width: 30vw;
-			background-color: rgb(27, 161, 206);
+			width: 25vw;
+			background-color: rgb(58, 106, 236);
 			border-width: 0;
-			border-radius: 6px;
+			border-radius: 20px;
 			color: white;
 
 		}
 		#reiniciarBtn {
 			padding: 5px 10px;
 			cursor: pointer;
+			border-radius: 15px;
 		}
 		#reiniciarBtn {
 			display: block;
 			margin: 20px auto;
 			color: white;
-			background-color: #b37700;
+			background-color: #ff7300;
 			border: none;
 		}
 	</style>
 </head>
 <body>
-	<h1>Lista de la Compra</h1>
+	<h1>Compra</h1>
 	<ul id="lista"></ul>
 	<div id="agregarForm">
 		<input type="text" id="itemInput" placeholder="Agregar item">
@@ -114,7 +113,7 @@
 	function enviar(event) {
 		event.preventDefault();
 		var item = document.getElementById('itemInput').value;
-		const userRef = ref(database, 'compra/' + item);
+		const userRef = ref(database, 'compra/');
 
 		// Guarda los datos usando la función set()
 		set(userRef, {
